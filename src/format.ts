@@ -263,11 +263,7 @@ function getFormatterRule(input: number, type: NumberType) {
   throw new Error(`formatter for type ${type} not configured correctly`)
 }
 
-export function formatNumber(
-  input?: number | null,
-  type: NumberType = NumberType.TokenNonTx,
-  placeholder: string = '-'
-) {
+export function formatNumber(input?: number | null, type: NumberType = NumberType.TokenNonTx, placeholder = '-') {
   if (input === null || input === undefined) {
     return placeholder
   }
@@ -291,10 +287,7 @@ export function formatPriceImpact(priceImpact: Percent | undefined) {
   return `${priceImpact.multiply(-1).toFixed(3)}%`
 }
 
-export function formatPrice(
-  price?: Price<Currency, Currency> | null,
-  type: NumberType = NumberType.FiatTokenPrice
-) {
+export function formatPrice(price?: Price<Currency, Currency> | null, type: NumberType = NumberType.FiatTokenPrice) {
   if (price === null || price === undefined) {
     return '-'
   }
@@ -322,9 +315,6 @@ export function formatNumberOrString(price: NullUndefined<number | string>, type
   return formatNumber(price, type)
 }
 
-export function formatUSDPrice(
-  price: NullUndefined<number | string>,
-  type: NumberType = NumberType.FiatTokenPrice
-) {
+export function formatUSDPrice(price: NullUndefined<number | string>, type: NumberType = NumberType.FiatTokenPrice) {
   return formatNumberOrString(price, type)
 }
