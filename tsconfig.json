@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "emitDeclarationOnly": true,
+    "paths": {
+      "@uniswap/widgets": [
+        "index"
+      ]
+    },
+    "types": [
+      "jest"
+    ]
+  },
+  "include": [
+    "src/"
+  ]
+}

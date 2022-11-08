@@ -1,0 +1,22 @@
+name: Release
+
+on:
+  workflow_dispatch: # manually
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: ./.github/actions/setup
+      - run: yarn prepare
+
+      - run: yarn test
+        if: success()
+
+      - run: yarn release
+        if: success()
+        env:
+          NPM_CONFIG_USERCONFIG: /dev/null
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
