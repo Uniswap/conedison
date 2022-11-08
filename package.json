@@ -13,6 +13,7 @@
   "scripts": {
     "lint": "eslint src",
     "test": "jest src",
+    "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.build.json",
     "release": "semantic-release"
   },

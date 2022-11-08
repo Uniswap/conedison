@@ -263,7 +263,7 @@ function getFormatterRule(input: number, type: NumberType) {
   throw new Error(`formatter for type ${type} not configured correctly`)
 }
 
-export function formatNumber(input?: Nullable<number>, type: NumberType = NumberType.TokenNonTx, placeholder = '-') {
+export function formatNumber(input: Nullish<number>, type: NumberType = NumberType.TokenNonTx, placeholder = '-') {
   if (input === null || input === undefined) {
     return placeholder
   }
@@ -274,7 +274,7 @@ export function formatNumber(input?: Nullable<number>, type: NumberType = Number
 }
 
 export function formatCurrencyAmount(
-  amount?: Nullable<CurrencyAmount<Currency>>,
+  amount: Nullish<CurrencyAmount<Currency>>,
   type: NumberType = NumberType.TokenNonTx,
   placeholder?: string
 ) {
@@ -287,7 +287,7 @@ export function formatPriceImpact(priceImpact: Percent | undefined) {
   return `${priceImpact.multiply(-1).toFixed(3)}%`
 }
 
-export function formatPrice(price?: Nullable<Price<Currency, Currency>>, type: NumberType = NumberType.FiatTokenPrice) {
+export function formatPrice(price: Nullish<Price<Currency, Currency>>, type: NumberType = NumberType.FiatTokenPrice) {
   if (price === null || price === undefined) {
     return '-'
   }
@@ -309,12 +309,12 @@ export function formatDate(date: Date) {
   })
 }
 
-export function formatNumberOrString(price?: Nullable<number | string>, type: NumberType) {
+export function formatNumberOrString(price: Nullish<number | string>, type: NumberType) {
   if (price === null || price === undefined) return '-'
   if (typeof price === 'string') return formatNumber(parseFloat(price), type)
   return formatNumber(price, type)
 }
 
-export function formatUSDPrice(price?: Nullable<number | string>, type: NumberType = NumberType.FiatTokenPrice) {
+export function formatUSDPrice(price: Nullish<number | string>, type: NumberType = NumberType.FiatTokenPrice) {
   return formatNumberOrString(price, type)
 }
