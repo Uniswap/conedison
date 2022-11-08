@@ -6,10 +6,18 @@
   "homepage": "https://github.com/Uniswap/conedison#readme",
   "bugs": "https://github.com/Uniswap/conedison/issues",
   "files": [
-    "dist/",
-    "src/"
+    "dist/"
   ],
-  "types": "dts/",
+  "exports": {
+    "./*": "./dist/*"
+  },
+  "typesVersions": {
+    "*": {
+      "*": [
+        "dist/*"
+      ]
+    }
+  },
   "scripts": {
     "lint": "eslint src",
     "test": "jest src",
