@@ -1,5 +1,4 @@
 import { Currency, CurrencyAmount, Percent, Price } from '@uniswap/sdk-core'
-
 import { Nullish } from './types'
 
 // Number formatting follows the standards laid out in this spec:
@@ -80,18 +79,6 @@ const SHORTHAND_USD_ONE_DECIMAL = new Intl.NumberFormat('en-US', {
   style: 'currency',
 })
 
-const SCIENTIFIC = new Intl.NumberFormat('en-US', {
-  notation: 'scientific',
-  maximumSignificantDigits: 3,
-})
-
-const SCIENTIFIC_USD = new Intl.NumberFormat('en-US', {
-  notation: 'scientific',
-  maximumSignificantDigits: 3,
-  currency: 'USD',
-  style: 'currency',
-})
-
 const SIX_SIG_FIGS_TWO_DECIMALS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumSignificantDigits: 6,
@@ -141,7 +128,7 @@ const tokenNonTxFormatter: FormatterRule[] = [
   { upperBound: 1, formatter: THREE_DECIMALS },
   { upperBound: 1e6, formatter: TWO_DECIMALS },
   { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS },
-  { upperBound: Infinity, formatter: SCIENTIFIC },
+  { upperBound: Infinity, formatter: '>999T' },
 ]
 
 const tokenTxFormatter: FormatterRule[] = [
@@ -160,7 +147,7 @@ const swapTradeAmountFormatter: FormatterRule[] = [
 ]
 
 const fiatTokenDetailsFormatter: FormatterRule[] = [
-  { upperBound: 0.000001, formatter: SCIENTIFIC_USD },
+  { upperBound: 0.00000001, formatter: '<$0.00000001' },
   { upperBound: 0.1, formatter: THREE_SIG_FIGS_USD },
   { upperBound: 1.05, formatter: THREE_DECIMALS_USD },
   { upperBound: 1e6, formatter: TWO_DECIMALS_USD },
@@ -168,7 +155,7 @@ const fiatTokenDetailsFormatter: FormatterRule[] = [
 ]
 
 const fiatTokenPricesFormatter: FormatterRule[] = [
-  { upperBound: 0.000001, formatter: SCIENTIFIC_USD },
+  { upperBound: 0.00000001, formatter: '<$0.00000001' },
   { upperBound: 1, formatter: THREE_SIG_FIGS_USD },
   { upperBound: 1e6, formatter: TWO_DECIMALS_USD },
   { upperBound: Infinity, formatter: SHORTHAND_USD_TWO_DECIMALS },
@@ -190,13 +177,18 @@ const fiatGasPriceFormatter: FormatterRule[] = [
 
 const fiatTokenQuantityFormatter = [{ exact: 0, formatter: '$0.00' }, ...fiatGasPriceFormatter]
 
+const portfolioBalanceFormatter: FormatterRule[] = [
+  { exact: 0, formatter: '$0.00' },
+  { upperBound: Infinity, formatter: TWO_DECIMALS_USD },
+]
+
 const ntfTokenFloorPriceFormatter: FormatterRule[] = [
   { exact: 0, formatter: '0' },
   { upperBound: 0.001, formatter: '<0.001' },
   { upperBound: 1, formatter: THREE_DECIMALS },
   { upperBound: 1000, formatter: TWO_DECIMALS },
   { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS },
-  { upperBound: Infinity, formatter: SCIENTIFIC },
+  { upperBound: Infinity, formatter: '>999T' },
 ]
 
 const ntfCollectionStatsFormatter: FormatterRule[] = [
@@ -230,6 +222,9 @@ export enum NumberType {
   // fiat gas prices
   FiatGasPrice = 'fiat-gas-price',
 
+  // portfolio balance
+  PortfolioBalance = 'portfolio-balance',
+
   // nft floor price denominated in a token (e.g, ETH)
   NFTTokenFloorPrice = 'nft-token-floor-price',
 
@@ -246,6 +241,7 @@ const TYPE_TO_FORMATTER_RULES = {
   [NumberType.FiatTokenPrice]: fiatTokenPricesFormatter,
   [NumberType.FiatTokenStats]: fiatTokenStatsFormatter,
   [NumberType.FiatGasPrice]: fiatGasPriceFormatter,
+  [NumberType.PortfolioBalance]: portfolioBalanceFormatter,
   [NumberType.NFTTokenFloorPrice]: ntfTokenFloorPriceFormatter,
   [NumberType.NFTCollectionStats]: ntfCollectionStatsFormatter,
 }
@@ -265,14 +261,18 @@ function getFormatterRule(input: number, type: NumberType) {
   throw new Error(`formatter for type ${type} not configured correctly`)
 }
 
-export function formatNumber(input: Nullish<number>, type: NumberType = NumberType.TokenNonTx, placeholder = '-') {
+export function formatNumber(
+  input: Nullish<number>,
+  type: NumberType = NumberType.TokenNonTx,
+  placeholder: string = '-'
+) {
   if (input === null || input === undefined) {
     return placeholder
   }
 
   const formatter = getFormatterRule(input, type)
   if (typeof formatter === 'string') return formatter
-  return formatter.format(input).replace('E', 'e') // the E in scientific notation should be lowercase
+  return formatter.format(input)
 }
 
 export function formatCurrencyAmount(
@@ -289,7 +289,10 @@ export function formatPriceImpact(priceImpact: Percent | undefined) {
   return `${priceImpact.multiply(-1).toFixed(3)}%`
 }
 
-export function formatPrice(price: Nullish<Price<Currency, Currency>>, type: NumberType = NumberType.FiatTokenPrice) {
+export function formatPrice(
+  price: Nullish<Price<Currency, Currency>>,
+  type: NumberType = NumberType.FiatTokenPrice
+) {
   if (price === null || price === undefined) {
     return '-'
   }
@@ -317,6 +320,9 @@ export function formatNumberOrString(price: Nullish<number | string>, type: Numb
   return formatNumber(price, type)
 }
 
-export function formatUSDPrice(price: Nullish<number | string>, type: NumberType = NumberType.FiatTokenPrice) {
+export function formatUSDPrice(
+  price: Nullish<number | string>,
+  type: NumberType = NumberType.FiatTokenPrice
+) {
   return formatNumberOrString(price, type)
 }
