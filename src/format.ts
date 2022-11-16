@@ -23,12 +23,6 @@ const FIVE_DECIMALS_MAX_TWO_DECIMALS_MIN_NO_COMMAS = new Intl.NumberFormat('en-U
   useGrouping: false,
 })
 
-const NO_DECIMALS = new Intl.NumberFormat('en-US', {
-  notation: 'standard',
-  maximumFractionDigits: 0,
-  minimumFractionDigits: 0,
-})
-
 const THREE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 3,
@@ -66,12 +60,6 @@ const TWO_DECIMALS_USD = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 2,
   currency: 'USD',
   style: 'currency',
-})
-
-const SHORTHAND_ONE_DECIMAL = new Intl.NumberFormat('en-US', {
-  notation: 'compact',
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
 })
 
 const SHORTHAND_TWO_DECIMALS = new Intl.NumberFormat('en-US', {
