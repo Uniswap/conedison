@@ -39,7 +39,7 @@ const THREE_DECIMALS_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
 const THREE_DECIMALS_USD = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 3,
-  minimumFractionDigits: 1,
+  minimumFractionDigits: 3,
   currency: 'USD',
   style: 'currency',
 })
