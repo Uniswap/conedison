@@ -5,6 +5,11 @@ import { Nullish } from './types'
 // Number formatting follows the standards laid out in this spec:
 // https://www.notion.so/uniswaplabs/Number-standards-fbb9f533f10e4e22820722c2f66d23c0
 
+const FIVE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+  notation: 'standard',
+  maximumFractionDigits: 5,
+})
+
 const FIVE_DECIMALS_MAX_TWO_DECIMALS_MIN = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 5,
@@ -24,13 +29,13 @@ const NO_DECIMALS = new Intl.NumberFormat('en-US', {
   minimumFractionDigits: 0,
 })
 
-const THREE_DECIMALS = new Intl.NumberFormat('en-US', {
+const THREE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 3,
-  minimumFractionDigits: 1,
+  minimumFractionDigits: 0,
 })
 
-const THREE_DECIMALS_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+const THREE_DECIMALS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 3,
   minimumFractionDigits: 3,
@@ -44,13 +49,12 @@ const THREE_DECIMALS_USD = new Intl.NumberFormat('en-US', {
   style: 'currency',
 })
 
-const TWO_DECIMALS = new Intl.NumberFormat('en-US', {
+const TWO_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 2,
-  minimumFractionDigits: 1,
 })
 
-const TWO_DECIMALS_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+const TWO_DECIMALS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 2,
   minimumFractionDigits: 2,
@@ -76,6 +80,16 @@ const SHORTHAND_TWO_DECIMALS = new Intl.NumberFormat('en-US', {
   maximumFractionDigits: 2,
 })
 
+const SHORTHAND_TWO_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 2,
+})
+
+const SHORTHAND_FIVE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 5,
+})
+
 const SHORTHAND_USD_TWO_DECIMALS = new Intl.NumberFormat('en-US', {
   notation: 'compact',
   minimumFractionDigits: 2,
@@ -95,6 +109,11 @@ const SHORTHAND_USD_ONE_DECIMAL = new Intl.NumberFormat('en-US', {
 const SCIENTIFIC = new Intl.NumberFormat('en-US', {
   notation: 'scientific',
   maximumSignificantDigits: 3,
+})
+
+const SCIENTIFIC_SIX_DIGITS = new Intl.NumberFormat('en-US', {
+  notation: 'scientific',
+  maximumSignificantDigits: 6,
 })
 
 const SCIENTIFIC_USD = new Intl.NumberFormat('en-US', {
@@ -150,8 +169,8 @@ type FormatterRule =
 const tokenNonTxFormatter: FormatterRule[] = [
   { exact: 0, formatter: '0' },
   { upperBound: 0.001, formatter: '<0.001' },
-  { upperBound: 1, formatter: THREE_DECIMALS_TRAILING_ZEROS },
-  { upperBound: 1e6, formatter: TWO_DECIMALS_TRAILING_ZEROS },
+  { upperBound: 1, formatter: THREE_DECIMALS },
+  { upperBound: 1e6, formatter: TWO_DECIMALS },
   { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS },
   { upperBound: Infinity, formatter: SCIENTIFIC },
 ]
@@ -161,7 +180,7 @@ const tokenTxFormatter: FormatterRule[] = [
   { upperBound: 0.00001, formatter: '<0.00001' },
   { upperBound: 1, formatter: FIVE_DECIMALS_MAX_TWO_DECIMALS_MIN },
   { upperBound: 10000, formatter: SIX_SIG_FIGS_TWO_DECIMALS },
-  { upperBound: Infinity, formatter: TWO_DECIMALS_TRAILING_ZEROS },
+  { upperBound: Infinity, formatter: TWO_DECIMALS },
 ]
 
 const swapTradeAmountFormatter: FormatterRule[] = [
@@ -202,7 +221,7 @@ const fiatGasPriceFormatter: FormatterRule[] = [
 
 const fiatTokenQuantityFormatter = [{ exact: 0, formatter: '$0.00' }, ...fiatGasPriceFormatter]
 
-const ntfTokenFloorPriceFormatter: FormatterRule[] = [
+const ntfTokenFloorPriceFormatterTrailingZeros: FormatterRule[] = [
   { exact: 0, formatter: '0' },
   { upperBound: 0.001, formatter: '<0.001' },
   { upperBound: 1, formatter: THREE_DECIMALS },
@@ -211,18 +230,22 @@ const ntfTokenFloorPriceFormatter: FormatterRule[] = [
   { upperBound: Infinity, formatter: SCIENTIFIC },
 ]
 
-const ntfTokenFloorPriceFormatterTrailingZeros: FormatterRule[] = [
+const ntfTokenFloorPriceFormatter: FormatterRule[] = [
   { exact: 0, formatter: '0' },
   { upperBound: 0.001, formatter: '<0.001' },
-  { upperBound: 1, formatter: THREE_DECIMALS_TRAILING_ZEROS },
-  { upperBound: 1000, formatter: TWO_DECIMALS_TRAILING_ZEROS },
-  { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS },
+  { upperBound: 1, formatter: THREE_DECIMALS_NO_TRAILING_ZEROS },
+  { upperBound: 1000, formatter: TWO_DECIMALS_NO_TRAILING_ZEROS },
+  { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS_NO_TRAILING_ZEROS },
   { upperBound: Infinity, formatter: SCIENTIFIC },
 ]
 
 const ntfCollectionStatsFormatter: FormatterRule[] = [
-  { upperBound: 1000, formatter: NO_DECIMALS },
-  { upperBound: Infinity, formatter: SHORTHAND_ONE_DECIMAL },
+  { exact: 0, formatter: '0' },
+  { upperBound: 0.00001, formatter: '<0.00001' },
+  { upperBound: 1, formatter: FIVE_DECIMALS_NO_TRAILING_ZEROS },
+  { upperBound: 1e6, formatter: SIX_SIG_FIGS_NO_COMMAS },
+  { upperBound: 1e15, formatter: SHORTHAND_FIVE_DECIMALS_NO_TRAILING_ZEROS },
+  { upperBound: Infinity, formatter: SCIENTIFIC_SIX_DIGITS },
 ]
 
 export enum NumberType {
