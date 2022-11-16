@@ -27,18 +27,30 @@ const NO_DECIMALS = new Intl.NumberFormat('en-US', {
 const THREE_DECIMALS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 3,
+  minimumFractionDigits: 1,
+})
+
+const THREE_DECIMALS_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+  notation: 'standard',
+  maximumFractionDigits: 3,
   minimumFractionDigits: 3,
 })
 
 const THREE_DECIMALS_USD = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 3,
-  minimumFractionDigits: 3,
+  minimumFractionDigits: 1,
   currency: 'USD',
   style: 'currency',
 })
 
 const TWO_DECIMALS = new Intl.NumberFormat('en-US', {
+  notation: 'standard',
+  maximumFractionDigits: 2,
+  minimumFractionDigits: 1,
+})
+
+const TWO_DECIMALS_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 2,
   minimumFractionDigits: 2,
@@ -138,8 +150,8 @@ type FormatterRule =
 const tokenNonTxFormatter: FormatterRule[] = [
   { exact: 0, formatter: '0' },
   { upperBound: 0.001, formatter: '<0.001' },
-  { upperBound: 1, formatter: THREE_DECIMALS },
-  { upperBound: 1e6, formatter: TWO_DECIMALS },
+  { upperBound: 1, formatter: THREE_DECIMALS_TRAILING_ZEROS },
+  { upperBound: 1e6, formatter: TWO_DECIMALS_TRAILING_ZEROS },
   { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS },
   { upperBound: Infinity, formatter: SCIENTIFIC },
 ]
@@ -149,7 +161,7 @@ const tokenTxFormatter: FormatterRule[] = [
   { upperBound: 0.00001, formatter: '<0.00001' },
   { upperBound: 1, formatter: FIVE_DECIMALS_MAX_TWO_DECIMALS_MIN },
   { upperBound: 10000, formatter: SIX_SIG_FIGS_TWO_DECIMALS },
-  { upperBound: Infinity, formatter: TWO_DECIMALS },
+  { upperBound: Infinity, formatter: TWO_DECIMALS_TRAILING_ZEROS },
 ]
 
 const swapTradeAmountFormatter: FormatterRule[] = [
@@ -199,6 +211,15 @@ const ntfTokenFloorPriceFormatter: FormatterRule[] = [
   { upperBound: Infinity, formatter: SCIENTIFIC },
 ]
 
+const ntfTokenFloorPriceFormatterTrailingZeros: FormatterRule[] = [
+  { exact: 0, formatter: '0' },
+  { upperBound: 0.001, formatter: '<0.001' },
+  { upperBound: 1, formatter: THREE_DECIMALS_TRAILING_ZEROS },
+  { upperBound: 1000, formatter: TWO_DECIMALS_TRAILING_ZEROS },
+  { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS },
+  { upperBound: Infinity, formatter: SCIENTIFIC },
+]
+
 const ntfCollectionStatsFormatter: FormatterRule[] = [
   { upperBound: 1000, formatter: NO_DECIMALS },
   { upperBound: Infinity, formatter: SHORTHAND_ONE_DECIMAL },
@@ -235,6 +256,9 @@ export enum NumberType {
 
   // nft collection stats like number of items, holder, and sales
   NFTCollectionStats = 'nft-collection-stats',
+
+  // nft floor price with trailing zeros
+  NFTTokenFloorPriceTrailingZeros = 'nft-token-floor-price-trailing-zeros',
 }
 
 const TYPE_TO_FORMATTER_RULES = {
@@ -247,6 +271,7 @@ const TYPE_TO_FORMATTER_RULES = {
   [NumberType.FiatTokenStats]: fiatTokenStatsFormatter,
   [NumberType.FiatGasPrice]: fiatGasPriceFormatter,
   [NumberType.NFTTokenFloorPrice]: ntfTokenFloorPriceFormatter,
+  [NumberType.NFTTokenFloorPriceTrailingZeros]: ntfTokenFloorPriceFormatterTrailingZeros,
   [NumberType.NFTCollectionStats]: ntfCollectionStatsFormatter,
 }
 
