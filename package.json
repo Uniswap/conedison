@@ -23,6 +23,7 @@
     "test": "jest src",
     "typecheck": "tsc -p tsconfig.json",
     "build": "tsc -p tsconfig.build.json",
+    "prepublishOnly": "yarn build",
     "release": "semantic-release"
   },
   "keywords": [
