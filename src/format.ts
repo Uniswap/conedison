@@ -5,6 +5,11 @@ import { Nullish } from './types'
 // Number formatting follows the standards laid out in this spec:
 // https://www.notion.so/uniswaplabs/Number-standards-fbb9f533f10e4e22820722c2f66d23c0
 
+const FIVE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+  notation: 'standard',
+  maximumFractionDigits: 5,
+})
+
 const FIVE_DECIMALS_MAX_TWO_DECIMALS_MIN = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 5,
@@ -18,9 +23,9 @@ const FIVE_DECIMALS_MAX_TWO_DECIMALS_MIN_NO_COMMAS = new Intl.NumberFormat('en-U
   useGrouping: false,
 })
 
-const NO_DECIMALS = new Intl.NumberFormat('en-US', {
+const THREE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
-  maximumFractionDigits: 0,
+  maximumFractionDigits: 3,
   minimumFractionDigits: 0,
 })
 
@@ -38,6 +43,11 @@ const THREE_DECIMALS_USD = new Intl.NumberFormat('en-US', {
   style: 'currency',
 })
 
+const TWO_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+  notation: 'standard',
+  maximumFractionDigits: 2,
+})
+
 const TWO_DECIMALS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 2,
@@ -52,16 +62,20 @@ const TWO_DECIMALS_USD = new Intl.NumberFormat('en-US', {
   style: 'currency',
 })
 
-const SHORTHAND_ONE_DECIMAL = new Intl.NumberFormat('en-US', {
-  notation: 'compact',
-  minimumFractionDigits: 1,
-  maximumFractionDigits: 1,
-})
-
 const SHORTHAND_TWO_DECIMALS = new Intl.NumberFormat('en-US', {
   notation: 'compact',
   minimumFractionDigits: 2,
   maximumFractionDigits: 2,
+})
+
+const SHORTHAND_TWO_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 2,
+})
+
+const SHORTHAND_FIVE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+  notation: 'compact',
+  maximumFractionDigits: 5,
 })
 
 const SHORTHAND_USD_TWO_DECIMALS = new Intl.NumberFormat('en-US', {
@@ -183,7 +197,7 @@ const portfolioBalanceFormatter: FormatterRule[] = [
   { upperBound: Infinity, formatter: TWO_DECIMALS_USD },
 ]
 
-const ntfTokenFloorPriceFormatter: FormatterRule[] = [
+const ntfTokenFloorPriceFormatterTrailingZeros: FormatterRule[] = [
   { exact: 0, formatter: '0' },
   { upperBound: 0.001, formatter: '<0.001' },
   { upperBound: 1, formatter: THREE_DECIMALS },
@@ -192,9 +206,22 @@ const ntfTokenFloorPriceFormatter: FormatterRule[] = [
   { upperBound: Infinity, formatter: '>999T' },
 ]
 
+const ntfTokenFloorPriceFormatter: FormatterRule[] = [
+  { exact: 0, formatter: '0' },
+  { upperBound: 0.001, formatter: '<0.001' },
+  { upperBound: 1, formatter: THREE_DECIMALS_NO_TRAILING_ZEROS },
+  { upperBound: 1000, formatter: TWO_DECIMALS_NO_TRAILING_ZEROS },
+  { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS_NO_TRAILING_ZEROS },
+  { upperBound: Infinity, formatter: SCIENTIFIC },
+]
+
 const ntfCollectionStatsFormatter: FormatterRule[] = [
-  { upperBound: 1000, formatter: NO_DECIMALS },
-  { upperBound: Infinity, formatter: SHORTHAND_ONE_DECIMAL },
+  { exact: 0, formatter: '0' },
+  { upperBound: 0.00001, formatter: '<0.00001' },
+  { upperBound: 1, formatter: FIVE_DECIMALS_NO_TRAILING_ZEROS },
+  { upperBound: 1e6, formatter: SIX_SIG_FIGS_NO_COMMAS },
+  { upperBound: 1e15, formatter: SHORTHAND_FIVE_DECIMALS_NO_TRAILING_ZEROS },
+  { upperBound: Infinity, formatter: SCIENTIFIC_SIX_DIGITS },
 ]
 
 export enum NumberType {
@@ -231,6 +258,9 @@ export enum NumberType {
 
   // nft collection stats like number of items, holder, and sales
   NFTCollectionStats = 'nft-collection-stats',
+
+  // nft floor price with trailing zeros
+  NFTTokenFloorPriceTrailingZeros = 'nft-token-floor-price-trailing-zeros',
 }
 
 const TYPE_TO_FORMATTER_RULES = {
@@ -244,6 +274,7 @@ const TYPE_TO_FORMATTER_RULES = {
   [NumberType.FiatGasPrice]: fiatGasPriceFormatter,
   [NumberType.PortfolioBalance]: portfolioBalanceFormatter,
   [NumberType.NFTTokenFloorPrice]: ntfTokenFloorPriceFormatter,
+  [NumberType.NFTTokenFloorPriceTrailingZeros]: ntfTokenFloorPriceFormatterTrailingZeros,
   [NumberType.NFTCollectionStats]: ntfCollectionStatsFormatter,
 }
 
