@@ -94,23 +94,6 @@ const SHORTHAND_USD_ONE_DECIMAL = new Intl.NumberFormat('en-US', {
   style: 'currency',
 })
 
-const SCIENTIFIC = new Intl.NumberFormat('en-US', {
-  notation: 'scientific',
-  maximumSignificantDigits: 3,
-})
-
-const SCIENTIFIC_SIX_DIGITS = new Intl.NumberFormat('en-US', {
-  notation: 'scientific',
-  maximumSignificantDigits: 6,
-})
-
-const SCIENTIFIC_USD = new Intl.NumberFormat('en-US', {
-  notation: 'scientific',
-  maximumSignificantDigits: 3,
-  currency: 'USD',
-  style: 'currency',
-})
-
 const SIX_SIG_FIGS_TWO_DECIMALS = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumSignificantDigits: 6,
@@ -160,7 +143,7 @@ const tokenNonTxFormatter: FormatterRule[] = [
   { upperBound: 1, formatter: THREE_DECIMALS },
   { upperBound: 1e6, formatter: TWO_DECIMALS },
   { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS },
-  { upperBound: Infinity, formatter: SCIENTIFIC },
+  { upperBound: Infinity, formatter: '>999T' },
 ]
 
 const tokenTxFormatter: FormatterRule[] = [
@@ -179,7 +162,7 @@ const swapTradeAmountFormatter: FormatterRule[] = [
 ]
 
 const fiatTokenDetailsFormatter: FormatterRule[] = [
-  { upperBound: 0.000001, formatter: SCIENTIFIC_USD },
+  { upperBound: 0.00000001, formatter: '<$0.00000001' },
   { upperBound: 0.1, formatter: THREE_SIG_FIGS_USD },
   { upperBound: 1.05, formatter: THREE_DECIMALS_USD },
   { upperBound: 1e6, formatter: TWO_DECIMALS_USD },
@@ -187,7 +170,7 @@ const fiatTokenDetailsFormatter: FormatterRule[] = [
 ]
 
 const fiatTokenPricesFormatter: FormatterRule[] = [
-  { upperBound: 0.000001, formatter: SCIENTIFIC_USD },
+  { upperBound: 0.00000001, formatter: '<$0.00000001' },
   { upperBound: 1, formatter: THREE_SIG_FIGS_USD },
   { upperBound: 1e6, formatter: TWO_DECIMALS_USD },
   { upperBound: Infinity, formatter: SHORTHAND_USD_TWO_DECIMALS },
@@ -209,13 +192,18 @@ const fiatGasPriceFormatter: FormatterRule[] = [
 
 const fiatTokenQuantityFormatter = [{ exact: 0, formatter: '$0.00' }, ...fiatGasPriceFormatter]
 
+const portfolioBalanceFormatter: FormatterRule[] = [
+  { exact: 0, formatter: '$0.00' },
+  { upperBound: Infinity, formatter: TWO_DECIMALS_USD },
+]
+
 const ntfTokenFloorPriceFormatterTrailingZeros: FormatterRule[] = [
   { exact: 0, formatter: '0' },
   { upperBound: 0.001, formatter: '<0.001' },
   { upperBound: 1, formatter: THREE_DECIMALS },
   { upperBound: 1000, formatter: TWO_DECIMALS },
   { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS },
-  { upperBound: Infinity, formatter: SCIENTIFIC },
+  { upperBound: Infinity, formatter: '>999T' },
 ]
 
 const ntfTokenFloorPriceFormatter: FormatterRule[] = [
@@ -224,7 +212,7 @@ const ntfTokenFloorPriceFormatter: FormatterRule[] = [
   { upperBound: 1, formatter: THREE_DECIMALS_NO_TRAILING_ZEROS },
   { upperBound: 1000, formatter: TWO_DECIMALS_NO_TRAILING_ZEROS },
   { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS_NO_TRAILING_ZEROS },
-  { upperBound: Infinity, formatter: SCIENTIFIC },
+  { upperBound: Infinity, formatter: '>999T' },
 ]
 
 const ntfCollectionStatsFormatter: FormatterRule[] = [
@@ -233,7 +221,7 @@ const ntfCollectionStatsFormatter: FormatterRule[] = [
   { upperBound: 1, formatter: FIVE_DECIMALS_NO_TRAILING_ZEROS },
   { upperBound: 1e6, formatter: SIX_SIG_FIGS_NO_COMMAS },
   { upperBound: 1e15, formatter: SHORTHAND_FIVE_DECIMALS_NO_TRAILING_ZEROS },
-  { upperBound: Infinity, formatter: SCIENTIFIC_SIX_DIGITS },
+  { upperBound: Infinity, formatter: '>999T' },
 ]
 
 export enum NumberType {
@@ -262,6 +250,9 @@ export enum NumberType {
   // fiat gas prices
   FiatGasPrice = 'fiat-gas-price',
 
+  // portfolio balance
+  PortfolioBalance = 'portfolio-balance',
+
   // nft floor price denominated in a token (e.g, ETH)
   NFTTokenFloorPrice = 'nft-token-floor-price',
 
@@ -281,6 +272,7 @@ const TYPE_TO_FORMATTER_RULES = {
   [NumberType.FiatTokenPrice]: fiatTokenPricesFormatter,
   [NumberType.FiatTokenStats]: fiatTokenStatsFormatter,
   [NumberType.FiatGasPrice]: fiatGasPriceFormatter,
+  [NumberType.PortfolioBalance]: portfolioBalanceFormatter,
   [NumberType.NFTTokenFloorPrice]: ntfTokenFloorPriceFormatter,
   [NumberType.NFTTokenFloorPriceTrailingZeros]: ntfTokenFloorPriceFormatterTrailingZeros,
   [NumberType.NFTCollectionStats]: ntfCollectionStatsFormatter,
@@ -308,7 +300,7 @@ export function formatNumber(input: Nullish<number>, type: NumberType = NumberTy
 
   const formatter = getFormatterRule(input, type)
   if (typeof formatter === 'string') return formatter
-  return formatter.format(input).replace('E', 'e') // the E in scientific notation should be lowercase
+  return formatter.format(input)
 }
 
 export function formatCurrencyAmount(
