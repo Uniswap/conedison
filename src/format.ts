@@ -212,7 +212,7 @@ const ntfTokenFloorPriceFormatter: FormatterRule[] = [
   { upperBound: 1, formatter: THREE_DECIMALS_NO_TRAILING_ZEROS },
   { upperBound: 1000, formatter: TWO_DECIMALS_NO_TRAILING_ZEROS },
   { upperBound: 1e15, formatter: SHORTHAND_TWO_DECIMALS_NO_TRAILING_ZEROS },
-  { upperBound: Infinity, formatter: SCIENTIFIC },
+  { upperBound: Infinity, formatter: '>999T' },
 ]
 
 const ntfCollectionStatsFormatter: FormatterRule[] = [
@@ -221,7 +221,7 @@ const ntfCollectionStatsFormatter: FormatterRule[] = [
   { upperBound: 1, formatter: FIVE_DECIMALS_NO_TRAILING_ZEROS },
   { upperBound: 1e6, formatter: SIX_SIG_FIGS_NO_COMMAS },
   { upperBound: 1e15, formatter: SHORTHAND_FIVE_DECIMALS_NO_TRAILING_ZEROS },
-  { upperBound: Infinity, formatter: SCIENTIFIC_SIX_DIGITS },
+  { upperBound: Infinity, formatter: '>999T' },
 ]
 
 export enum NumberType {

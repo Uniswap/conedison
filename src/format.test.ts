@@ -114,5 +114,5 @@ it('formats NFT numbers correctly', () => {
   expect(formatNumber(76543.21, NumberType.NFTCollectionStats)).toBe('76543.2')
   expect(formatNumber(7.60000054321, NumberType.NFTCollectionStats)).toBe('7.6')
   expect(formatNumber(1234567890, NumberType.NFTCollectionStats)).toBe('1.23457B')
-  expect(formatNumber(1234567000000000, NumberType.NFTCollectionStats)).toBe('1.23457e15')
+  expect(formatNumber(1234567000000000, NumberType.NFTCollectionStats)).toBe('>999T')
 })
