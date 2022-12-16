@@ -1,4 +1,4 @@
-import { formatNumber, NumberType } from './format'
+import { formatNumber, formatUSDPrice, NumberType } from './format'
 
 it('formats token reference numbers correctly', () => {
   expect(formatNumber(1234567000000000, NumberType.TokenNonTx)).toBe('>999T')
@@ -115,4 +115,40 @@ it('formats NFT numbers correctly', () => {
   expect(formatNumber(7.60000054321, NumberType.NFTCollectionStats)).toBe('7.6')
   expect(formatNumber(1234567890, NumberType.NFTCollectionStats)).toBe('1.23457B')
   expect(formatNumber(1234567000000000, NumberType.NFTCollectionStats)).toBe('>999T')
+})
+
+describe('formatUSDPrice', () => {
+  it('should correctly format 0.000000009876', () => {
+    expect(formatUSDPrice(0.000000009876)).toBe('<$0.00000001')
+  })
+  it('should correctly format 0.00001231', () => {
+    expect(formatUSDPrice(0.00001231)).toBe('$0.0000123')
+  })
+  it('should correctly format 0.001231', () => {
+    expect(formatUSDPrice(0.001231)).toBe('$0.00123')
+  })
+  it('should correctly format 0.0', () => {
+    expect(formatUSDPrice(0.0)).toBe('$0.00')
+  })
+  it('should correctly format 0', () => {
+    expect(formatUSDPrice(0)).toBe('$0.00')
+  })
+  it('should correctly format 1.048942', () => {
+    expect(formatUSDPrice(1.048942)).toBe('$1.049')
+  })
+  it('should correctly format 0.10235', () => {
+    expect(formatUSDPrice(0.10235)).toBe('$0.102')
+  })
+  it('should correctly format 1234.5678', () => {
+    expect(formatUSDPrice(1_234.5678)).toBe('$1,234.57')
+  })
+  it('should correctly format 1234567.8910', () => {
+    expect(formatUSDPrice(1_234_567.891)).toBe('$1.23M')
+  })
+  it('should correctly format 1000000000000', () => {
+    expect(formatUSDPrice(1_000_000_000_000)).toBe('$1.00T')
+  })
+  it('should correctly format 1000000000000000', () => {
+    expect(formatUSDPrice(1_000_000_000_000_000)).toBe('>$999T')
+  })
 })
