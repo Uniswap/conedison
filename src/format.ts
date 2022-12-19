@@ -162,6 +162,7 @@ const swapTradeAmountFormatter: FormatterRule[] = [
 ]
 
 const fiatTokenDetailsFormatter: FormatterRule[] = [
+  { exact: 0, formatter: '$0.00' },
   { upperBound: 0.00000001, formatter: '<$0.00000001' },
   { upperBound: 0.1, formatter: THREE_SIG_FIGS_USD },
   { upperBound: 1.05, formatter: THREE_DECIMALS_USD },
@@ -170,10 +171,13 @@ const fiatTokenDetailsFormatter: FormatterRule[] = [
 ]
 
 const fiatTokenPricesFormatter: FormatterRule[] = [
+  { exact: 0, formatter: '$0.00' },
   { upperBound: 0.00000001, formatter: '<$0.00000001' },
-  { upperBound: 1, formatter: THREE_SIG_FIGS_USD },
-  { upperBound: 1e6, formatter: TWO_DECIMALS_USD },
-  { upperBound: Infinity, formatter: SHORTHAND_USD_TWO_DECIMALS },
+  { upperBound: 0.1, formatter: THREE_SIG_FIGS_USD }, // Round to 3 significant figures, show significant trailing zeros
+  { upperBound: 1.05, formatter: THREE_DECIMALS_USD }, // Round to 3 decimal places, show significant trailing zeros
+  { upperBound: 1_000_000, formatter: TWO_DECIMALS_USD }, // Round to 2 decimal places
+  { upperBound: 1_000_000_000_000_000, formatter: SHORTHAND_USD_TWO_DECIMALS }, // Use M/B/T abbreviations
+  { upperBound: Infinity, formatter: '>$999T' }, // Use M/B/T abbreviations
 ]
 
 const fiatTokenStatsFormatter: FormatterRule[] = [
