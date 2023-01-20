@@ -16,7 +16,7 @@ export async function signTypedData(
   signer: JsonRpcSigner,
   domain: TypedDataDomain,
   types: Record<string, TypedDataField[]>,
-  value: Record<string, unknown>
+  value: Record<string, any> // eslint-disable-line @typescript-eslint/no-explicit-any
 ) {
   // Populate any ENS names (in-place)
   const populated = await _TypedDataEncoder.resolveNames(domain, types, value, (name: string) => {
