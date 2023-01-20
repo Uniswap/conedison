@@ -6,8 +6,9 @@ import type { JsonRpcSigner } from '@ethersproject/providers'
 export const INVALID_PARAMS_CODE = -32602
 
 /**
- * Overrides the _signTypedData method to add support for wallets without EIP-712 support (eg Zerion) by adding a fallback to eth_sign.
- * The implementation is copied from ethers (and linted), except for the catch statement, which removes the logger and adds the fallback.
+ * Calls into the eth_signTypedData methods to add support for wallets with spotty EIP-712 support (eg Safepal) or without any (eg Zerion),
+ * by first trying eth_signTypedData, and then falling back to either eth_signTyepdData_v4 or eth_sign.
+ * The implementation is copied from ethers (and linted).
  * @see https://github.com/ethers-io/ethers.js/blob/c80fcddf50a9023486e9f9acb1848aba4c19f7b6/packages/providers/src.ts/json-rpc-provider.ts#L334
  */
 export async function signTypedData(
