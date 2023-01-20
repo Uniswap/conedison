@@ -10,6 +10,7 @@ export const INVALID_PARAMS_CODE = -32602
  * by first trying eth_signTypedData, and then falling back to either eth_signTyepdData_v4 or eth_sign.
  * The implementation is copied from ethers (and linted).
  * @see https://github.com/ethers-io/ethers.js/blob/c80fcddf50a9023486e9f9acb1848aba4c19f7b6/packages/providers/src.ts/json-rpc-provider.ts#L334
+ * TODO(https://github.com/ethers-io/ethers.js/pull/3667): Remove if upstreamed.
  */
 export async function signTypedData(
   signer: JsonRpcSigner,
