@@ -47,7 +47,7 @@ export async function signTypedData(
     }
   } catch (error) {
     // If neither other method is available (eg Zerion), fallback to eth_sign.
-    if (typeof error.message === 'string' && error.message.match(/not found/i)) {
+    if (typeof error.message === 'string' && error.message.match(/not (found|implemented)/i)) {
       console.warn('eth_signTypedData_* failed, falling back to eth_sign:', error)
       const hash = _TypedDataEncoder.hash(populated.domain, types, populated.value)
       return await signer.provider.send('eth_sign', [address, hash])
