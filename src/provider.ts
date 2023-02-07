@@ -39,6 +39,7 @@ export async function signTypedData(
    */
   try {
     // MetaMask is known to implement v4. Other wallets should first attempt signTypedData because SafePal hangs on v4.
+    // However, MetaMask will still fallback to sign in case an unknown wallet impersonates MetaMask.
     if (!signer.provider.connection.url.match(/metamask/)) {
       try {
         return await signer.provider.send('eth_signTypedData', [
