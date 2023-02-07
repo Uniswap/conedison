@@ -25,30 +25,29 @@ export async function signTypedData(
   const address = await signer.getAddress()
 
   /*
-   * Some wallets require special-casing as they will hang if sent invalid parameters or unimplemented methods:
+   * Some wallets require special-casing:
    *
-   * - MetaMask and Frame (and likely others) implement signTypedData historically, following the original
-   *   signTypedData blog post [1] which flips the parameter ordering. We must pass the modern ordering and then catch
-   *   the error, because...
-   * - SafePal Mobile hangs (without rejecting) if passed the old parameter ordering, as well as hanging on v4.
+   * - MetaMask and Frame (and likely others) implement signTypedData following the original blog post [1].
+   *   EIP-712 flips the parameter ordering [2], and we prefer the documented ordering, because...
+   * - SafePal Mobile hangs (without rejecting) if passed the old parameter ordering. SafePal also hangs on v4.
    *
-   * For a good overview of signing data (and before modifying this code :pray:), see MetaMask's documentation [2].
+   * For a good overview of signing data (and before modifying this code 🙏), see MetaMask's documentation [3].
    *
    * [1]: Blog post introducing signTypedData: https://medium.com/metamask/scaling-web3-with-signtypeddata-91d6efc8b290
-   * [2]: MetaMask's reference on "Signing Data": https://docs.metamask.io/guide/signing-data.html#signing-data
+   * [2]: signTypedData parameters: https://eips.ethereum.org/EIPS/eip-712#parameters
+   * [3]: MetaMask's reference on "Signing Data": https://docs.metamask.io/guide/signing-data.html#signing-data
    */
   try {
-    // MetaMask is known to implement v4. Other wallets should first attempt signTypedData because SafePal hangs on v4.
-    // However, MetaMask will still fallback to sign in case an unknown wallet impersonates MetaMask.
+    // MetaMask is known to implement v4. Other wallets must use signTypedData, because SafePal hangs on v4.
+    // However, MetaMask still falls back to sign in case a wallet impersonating MetaMask does not implement v4.
     if (!signer.provider.connection.url.match(/metamask/)) {
       try {
         return await signer.provider.send('eth_signTypedData', [
-          // We must use the modern ordering, because SafePal hangs if passed the historical parameter ordering:
           address.toLowerCase(),
           JSON.stringify(_TypedDataEncoder.getPayload(populated.domain, types, populated.value)),
         ])
       } catch (error) {
-        // Frame uses the historical ordering but implements v4, so it is special-cased to fall back to v4:
+        // Frame supports v4 but does not self-identify like MetaMask, so it is special-cased to fall back to v4:
         if (typeof error.message === 'string' && error.message.match(/unknown account/i)) {
           console.warn('signTypedData: wallet expects historical parameter ordering, falling back to v4')
         } else {
@@ -62,7 +61,6 @@ export async function signTypedData(
       JSON.stringify(_TypedDataEncoder.getPayload(populated.domain, types, populated.value)),
     ])
   } catch (error) {
-    // Fallback to eth_sign:
     if (typeof error.message === 'string' && error.message.match(/not (found|implemented)/i)) {
       console.warn('signTypedData: wallet does not implement EIP-712, falling back to sign')
       const hash = _TypedDataEncoder.hash(populated.domain, types, populated.value)
