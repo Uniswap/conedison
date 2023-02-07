@@ -2,9 +2,6 @@ import type { TypedDataDomain, TypedDataField } from '@ethersproject/abstract-si
 import { _TypedDataEncoder } from '@ethersproject/hash'
 import type { JsonRpcSigner } from '@ethersproject/providers'
 
-// See https://github.com/MetaMask/eth-rpc-errors/blob/b19c8724168eec4ce3f8b1f87642f231f0dd27b2/src/error-constants.ts#L12
-export const INVALID_PARAMS_CODE = -32602
-
 /**
  * Calls into the eth_signTypedData methods to add support for wallets with spotty EIP-712 support (eg Safepal) or without any (eg Zerion),
  * by first trying eth_signTypedData, and then falling back to either eth_signTyepdData_v4 or eth_sign.
@@ -27,28 +24,46 @@ export async function signTypedData(
 
   const address = await signer.getAddress()
 
+  /*
+   * Some wallets require special-casing as they will hang if sent invalid parameters or unimplemented methods:
+   *
+   * - MetaMask and Frame (and likely others) implement signTypedData historically, following the original
+   *   signTypedData blog post [1] which flips the parameter ordering. We must pass the modern ordering and then catch
+   *   the error, because...
+   * - SafePal Mobile hangs (without rejecting) if passed the old parameter ordering, as well as hanging on v4.
+   *
+   * For a good overview of signing data (and before modifying this code :pray:), see MetaMask's documentation [2].
+   *
+   * [1]: Blog post introducing signTypedData: https://medium.com/metamask/scaling-web3-with-signtypeddata-91d6efc8b290
+   * [2]: MetaMask's reference on "Signing Data": https://docs.metamask.io/guide/signing-data.html#signing-data
+   */
   try {
-    try {
-      // We must try the unversioned eth_signTypedData first, because some wallets (eg SafePal) will hang on _v4.
-      return await signer.provider.send('eth_signTypedData', [
-        address.toLowerCase(),
-        JSON.stringify(_TypedDataEncoder.getPayload(populated.domain, types, populated.value)),
-      ])
-    } catch (error) {
-      // MetaMask complains that the unversioned eth_signTypedData is formatted incorrectly (32602) - it prefers _v4.
-      if (error.code === INVALID_PARAMS_CODE) {
-        console.warn('eth_signTypedData failed, falling back to eth_signTypedData_v4:', error)
-        return await signer.provider.send('eth_signTypedData_v4', [
+    // MetaMask is known to implement v4. Other wallets should first attempt signTypedData because SafePal hangs on v4.
+    if (!signer.provider.connection.url.match(/metamask/)) {
+      try {
+        return await signer.provider.send('eth_signTypedData', [
+          // We must use the modern ordering, because SafePal hangs if passed the historical parameter ordering:
           address.toLowerCase(),
           JSON.stringify(_TypedDataEncoder.getPayload(populated.domain, types, populated.value)),
         ])
+      } catch (error) {
+        // Frame uses the historical ordering but implements v4, so it is special-cased to fall back to v4:
+        if (typeof error.message === 'string' && error.message.match(/unknown account/i)) {
+          console.warn('signTypedData: wallet expects historical parameter ordering, falling back to v4')
+        } else {
+          throw error
+        }
       }
-      throw error
     }
+
+    return await signer.provider.send('eth_signTypedData_v4', [
+      address.toLowerCase(),
+      JSON.stringify(_TypedDataEncoder.getPayload(populated.domain, types, populated.value)),
+    ])
   } catch (error) {
-    // If neither other method is available (eg Zerion), fallback to eth_sign.
+    // Fallback to eth_sign:
     if (typeof error.message === 'string' && error.message.match(/not (found|implemented)/i)) {
-      console.warn('eth_signTypedData_* failed, falling back to eth_sign:', error)
+      console.warn('signTypedData: wallet does not implement EIP-712, falling back to sign')
       const hash = _TypedDataEncoder.hash(populated.domain, types, populated.value)
       return await signer.provider.send('eth_sign', [address, hash])
     }
