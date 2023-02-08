@@ -48,6 +48,7 @@
     "@typescript-eslint/eslint-plugin": "^5.42.0",
     "@typescript-eslint/parser": "^5.42.0",
     "@uniswap/sdk-core": "^3.1.0",
+    "@walletconnect/ethereum-provider": "^1.8.0",
     "babel-jest": "^29.3.0",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^8.5.0",
@@ -64,6 +65,7 @@
   },
   "peerDependencies": {
     "@uniswap/sdk-core": ">=3",
+    "@walletconnect/ethereum-provider": "^1.8.0",
     "ethers": "^5.6.1"
   }
 }
