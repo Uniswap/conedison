@@ -1,6 +1,7 @@
-import { JsonRpcProvider } from '@ethersproject/providers'
+import { ExternalProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
+import { Mutable } from 'types'
 
-import { getPeerMeta } from './walletconnect'
+import { getPeerMeta } from './meta'
 
 describe('walletconnect', () => {
   describe('getPeerMeta', () => {
@@ -12,7 +13,8 @@ describe('walletconnect', () => {
     it('returns peerMeta for a WalletConnect-derived JsonRpcProvider', () => {
       const provider = new JsonRpcProvider()
       const peerMeta = {}
-      provider['provider'] = { isWalletConnect: true, connector: { peerMeta } }
+      const web3Provider = provider as Mutable<Web3Provider>
+      web3Provider.provider = { isWalletConnect: true, connector: { peerMeta } } as ExternalProvider
       expect(getPeerMeta(provider)).toBe(peerMeta)
     })
   })
