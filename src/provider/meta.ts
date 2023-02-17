@@ -30,7 +30,7 @@ function getInjectedMeta(provider: ExternalProvider & Record<string, unknown>): 
   const properties = Object.getOwnPropertyNames(provider)
   const names =
     properties
-      .filter((name) => name.match(/^is.*$/) && (provider as Record<string, unknown>)[name])
+      .filter((name) => name.match(/^is.*$/) && (provider as Record<string, unknown>)[name] === true)
       .map((name) => name.slice(2)) ?? []
 
   // Add qrUrl to identify QR-initiated connections (eg for Coinbase Wallet via mobile QR).

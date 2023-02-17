@@ -29,7 +29,12 @@ class MockInjectedProvider extends MockJsonRpcProvider {
 
   constructor(provider: Record<string, boolean | undefined>) {
     super(provider)
-    this.provider = provider as ExternalProvider
+    this.provider = {
+      isConnected() {
+        return true
+      },
+      ...provider,
+    } as ExternalProvider
   }
 }
 
