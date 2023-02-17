@@ -3,7 +3,7 @@ import { Mutable } from 'types'
 
 import { signTypedData } from '../provider'
 
-describe('provider', () => {
+describe('signing', () => {
   describe('signTypedData', () => {
     const wallet = '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826'
     const domain = {
