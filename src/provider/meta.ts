@@ -16,18 +16,27 @@ export enum WalletType {
 
 /**
  * WalletMeta for WalletConnect or Injected wallets.
+ *
  * For WalletConnect wallets, name, description, url, and icons are taken from WalletConnect's peerMeta
  * (as passed by the wallet or scraped from the dApp - @see https://docs.walletconnect.com/1.0/specs#session-request).
- * For Injected wallets, the name is derived from `is*` properties on the provider (eg `isMetaMask`).
+ * For Injected wallets, the name is derived from the `is*` properties on the provider (eg `isCoinbaseWallet`).
  */
 export interface WalletMeta {
   type: WalletType
-  /** A string denoting the wallet's provenance, including all `is*` properties and the type. */
+  /**
+   * The agent string of the wallet, for use with analytics/debugging.
+   * Denotes the wallet's provenance - analagous to a User String - including all `is*` properties and the type.
+   *
+   * Some injected wallets are used different ways (eg with/without spoofing MetaMask).
+   * The agent will capture these differences, while the name will not.
+   *
+   * @example 'CoinbaseWallet qUrl (Injected)'
+   */
   agent: string
   /**
-   * The name of the wallet.
-   * Some injected wallets can be used multiple ways (eg with/without spoofing MetaMask).
-   * In these cases, the agent should be used to differentiate different usages of the same wallet.
+   * The name of the wallet, for use with UI.
+   *
+   * @example 'CoinbaseWallet'
    */
   name?: string
   description?: string
