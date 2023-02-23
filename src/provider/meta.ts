@@ -1,9 +1,12 @@
 import type { ExternalProvider, JsonRpcProvider, Web3Provider } from '@ethersproject/providers'
-import WalletConnectProvider from '@walletconnect/ethereum-provider'
+import type WalletConnectProviderV1 from '@walletconnect/ethereum-provider-v1'
+import type WalletConnectProviderV2 from '@walletconnect/ethereum-provider-v2'
 
 function isWeb3Provider(provider: JsonRpcProvider): provider is Web3Provider {
   return 'provider' in provider
 }
+
+type WalletConnectProvider = WalletConnectProviderV1 | WalletConnectProviderV2
 
 function isWalletConnectProvider(provider: ExternalProvider): provider is WalletConnectProvider {
   return (provider as WalletConnectProvider).isWalletConnect
@@ -18,7 +21,9 @@ export enum WalletType {
  * WalletMeta for WalletConnect or Injected wallets.
  *
  * For WalletConnect wallets, name, description, url, and icons are taken from WalletConnect's peerMeta
- * (as passed by the wallet or scraped from the dApp - @see https://docs.walletconnect.com/1.0/specs#session-request).
+ * v1: @see https://docs.walletconnect.com/1.0/specs#session-request
+ * v2: @see https://docs.walletconnect.com/2.0/specs/clients/core/pairing/data-structures#metadata
+ *
  * For Injected wallets, the name is derived from the `is*` properties on the provider (eg `isCoinbaseWallet`).
  */
 export interface WalletMeta {
@@ -45,11 +50,19 @@ export interface WalletMeta {
 }
 
 function getWalletConnectMeta(provider: WalletConnectProvider): WalletMeta {
-  const { peerMeta } = provider.connector
+  let metadata:
+    | WalletConnectProviderV1['connector']['peerMeta']
+    | NonNullable<WalletConnectProviderV2['session']>['peer']['metadata']
+    | undefined
+  if ('session' in provider) {
+    metadata = provider.session?.peer.metadata
+  } else {
+    metadata = provider.connector.peerMeta
+  }
   return {
     type: WalletType.WALLET_CONNECT,
-    agent: peerMeta ? `${peerMeta.name} (WalletConnect)` : '(WalletConnect)',
-    ...provider.connector.peerMeta,
+    agent: metadata ? `${metadata.name} (WalletConnect)` : '(WalletConnect)',
+    ...metadata,
   }
 }
 

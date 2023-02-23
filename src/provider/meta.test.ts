@@ -1,5 +1,7 @@
-import { ExternalProvider, JsonRpcProvider } from '@ethersproject/providers'
-import WalletConnectProvider from '@walletconnect/ethereum-provider'
+import type { ExternalProvider } from '@ethersproject/providers'
+import { JsonRpcProvider } from '@ethersproject/providers'
+import type WalletConnectProviderV1 from '@walletconnect/ethereum-provider-v1'
+import type WalletConnectProviderV2 from '@walletconnect/ethereum-provider-v2'
 
 import { getWalletMeta, WalletMeta, WalletType } from './meta'
 
@@ -13,13 +15,25 @@ class MockJsonRpcProvider extends JsonRpcProvider {
   }
 }
 
-class MockWalletConnectProvider extends MockJsonRpcProvider {
-  name = WalletType.WALLET_CONNECT
-  provider: ExternalProvider
+const WC_META = { name: 'name', description: 'description', url: 'url', icons: [] }
 
-  constructor(peerMeta: WalletConnectProvider['connector']['peerMeta']) {
+class MockWalletConnectProviderV1 extends MockJsonRpcProvider {
+  name = WalletType.WALLET_CONNECT
+  provider: WalletConnectProviderV1
+
+  constructor(peerMeta: typeof WC_META | null) {
     super(peerMeta)
-    this.provider = { isWalletConnect: true, connector: { peerMeta } } as ExternalProvider
+    this.provider = { isWalletConnect: true, connector: { peerMeta } } as unknown as WalletConnectProviderV1
+  }
+}
+
+class MockWalletConnectProviderV2 extends MockJsonRpcProvider {
+  name = WalletType.WALLET_CONNECT
+  provider: WalletConnectProviderV2
+
+  constructor(metadata: typeof WC_META | null) {
+    super(metadata)
+    this.provider = { isWalletConnect: true, session: { peer: { metadata } } } as unknown as WalletConnectProviderV2
   }
 }
 
@@ -38,14 +52,17 @@ class MockInjectedProvider extends MockJsonRpcProvider {
   }
 }
 
-const PEER_META = { name: 'name', description: 'description', url: 'url', icons: [] }
-
 const testCases: [MockJsonRpcProvider, WalletMeta | undefined][] = [
   [new MockJsonRpcProvider(), undefined],
-  [new MockWalletConnectProvider(null), { type: WalletType.WALLET_CONNECT, agent: '(WalletConnect)' }],
+  [new MockWalletConnectProviderV1(null), { type: WalletType.WALLET_CONNECT, agent: '(WalletConnect)' }],
   [
-    new MockWalletConnectProvider(PEER_META),
-    { type: WalletType.WALLET_CONNECT, agent: 'name (WalletConnect)', ...PEER_META },
+    new MockWalletConnectProviderV1(WC_META),
+    { type: WalletType.WALLET_CONNECT, agent: 'name (WalletConnect)', ...WC_META },
+  ],
+  [new MockWalletConnectProviderV2(null), { type: WalletType.WALLET_CONNECT, agent: '(WalletConnect)' }],
+  [
+    new MockWalletConnectProviderV2(WC_META),
+    { type: WalletType.WALLET_CONNECT, agent: 'name (WalletConnect)', ...WC_META },
   ],
   [new MockInjectedProvider({}), { type: WalletType.INJECTED, agent: '(Injected)', name: undefined }],
   [
