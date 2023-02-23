@@ -2,18 +2,22 @@ import type { TypedDataDomain, TypedDataField } from '@ethersproject/abstract-si
 import { _TypedDataEncoder } from '@ethersproject/hash'
 import type { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers'
 
-import { getPeerMeta } from './walletconnect'
+import { getWalletMeta, WalletType } from './meta'
 
-// These are wallets which do not implement eth_signTypedData_v4, but *do* implement eth_signTypedData.
+// These are WalletConnect peers which do not implement eth_signTypedData_v4, but *do* implement eth_signTypedData.
 // They are special-cased so that signing will still use EIP-712 (which is safer for the user).
-const WALLETS_LACKING_V4_SUPPORT = ['SafePal Wallet']
+const WC_PEERS_LACKING_V4_SUPPORT = ['SafePal Wallet']
 
+// Assumes v4 support by default, except for known wallets.
 function supportsV4(provider: JsonRpcProvider): boolean {
-  const name = getPeerMeta(provider)?.name
-
-  // By default, we assume v4 support.
-  if (name && WALLETS_LACKING_V4_SUPPORT.includes(name)) {
-    return false
+  const meta = getWalletMeta(provider)
+  if (meta) {
+    const { type, name } = meta
+    if (name) {
+      if (type === WalletType.WALLET_CONNECT && name && WC_PEERS_LACKING_V4_SUPPORT.includes(name)) {
+        return false
+      }
+    }
   }
 
   return true

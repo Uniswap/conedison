@@ -1,8 +1,9 @@
-import { JsonRpcProvider, JsonRpcSigner } from '@ethersproject/providers'
+import { ExternalProvider, JsonRpcProvider, JsonRpcSigner, Web3Provider } from '@ethersproject/providers'
+import { Mutable } from 'types'
 
-import { signTypedData } from './provider'
+import { signTypedData } from '../provider'
 
-describe('provider', () => {
+describe('signing', () => {
   describe('signTypedData', () => {
     const wallet = '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826'
     const domain = {
@@ -103,7 +104,8 @@ describe('provider', () => {
     describe('wallets which do not support eth_signTypedData_v4', () => {
       describe.each(['SafePal Wallet'])('%s', (name) => {
         beforeEach(() => {
-          signer.provider['provider'] = { isWalletConnect: true, connector: { peerMeta: { name } } }
+          const web3Provider = signer.provider as Mutable<Web3Provider>
+          web3Provider.provider = { isWalletConnect: true, connector: { peerMeta: { name } } } as ExternalProvider
         })
 
         it('signs using eth_signTypedData', async () => {
