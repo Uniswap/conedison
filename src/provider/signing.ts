@@ -8,13 +8,15 @@ import { getWalletMeta, WalletType } from './meta'
 // They are special-cased so that signing will still use EIP-712 (which is safer for the user).
 const WC_PEERS_LACKING_V4_SUPPORT = ['SafePal Wallet']
 
+// Assumes v4 support by default, except for known wallets.
 function supportsV4(provider: JsonRpcProvider): boolean {
-  const { type, name } = getWalletMeta(provider)
-
-  // We assume v4 support by default.
-  if (name) {
-    if (type === WalletType.WALLET_CONNECT && name && WC_PEERS_LACKING_V4_SUPPORT.includes(name)) {
-      return false
+  const meta = getWalletMeta(provider)
+  if (meta) {
+    const { type, name } = meta
+    if (name) {
+      if (type === WalletType.WALLET_CONNECT && name && WC_PEERS_LACKING_V4_SUPPORT.includes(name)) {
+        return false
+      }
     }
   }
 
