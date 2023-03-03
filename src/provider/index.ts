@@ -23,23 +23,15 @@ function isUniswapWallet(provider: JsonRpcProvider): boolean {
 export async function sendTransaction(
   provider: JsonRpcProvider,
   transaction: Deferrable<TransactionRequest>,
-  includeGasLimit?: false
-): Promise<TransactionResponse>
-export async function sendTransaction(
-  provider: JsonRpcProvider,
-  transaction: Deferrable<TransactionRequest>,
-  gasMargin?: number
-): Promise<TransactionResponse>
-export async function sendTransaction(
-  provider: JsonRpcProvider,
-  transaction: Deferrable<TransactionRequest>,
-  gasMarginOrNah: number | false = isUniswapWallet(provider) ? false : 0.2
+  gasMargin = 0,
+  skipGasLimit = isUniswapWallet(provider)
 ): Promise<TransactionResponse> {
-  const gasMargin = gasMarginOrNah === false ? undefined : gasMarginOrNah
   let gasLimit: BigNumber | undefined
-  if (gasMargin !== undefined) {
-    const gasEstimate = await provider.estimateGas(transaction)
-    gasLimit = gasEstimate.add(gasEstimate.mul(Math.floor(gasMargin * 100)).div(100))
+  if (!skipGasLimit) {
+    gasLimit = await provider.estimateGas(transaction)
+    if (gasMargin) {
+      gasLimit = gasLimit.add(gasLimit.mul(Math.floor(gasMargin * 100)).div(100))
+    }
   }
 
   const hash = await provider.getSigner().sendUncheckedTransaction({ ...transaction, gasLimit })

@@ -21,9 +21,9 @@ describe('sendTransaction', () => {
     sendUncheckedTransaction.mockReset()
   })
 
-  it('sends a transaction with default gas margin', async () => {
+  it('sends a transaction with no gas margin', async () => {
     await expect(sendTransaction(provider, request)).resolves.toBe(response)
-    expect(signer.sendUncheckedTransaction).toHaveBeenCalledWith({ ...request, gasLimit: BigNumber.from(12) })
+    expect(signer.sendUncheckedTransaction).toHaveBeenCalledWith({ ...request, gasLimit: BigNumber.from(10) })
   })
 
   it('sends a transaction with configured gas margin', async () => {
@@ -31,8 +31,8 @@ describe('sendTransaction', () => {
     expect(signer.sendUncheckedTransaction).toHaveBeenCalledWith({ ...request, gasLimit: BigNumber.from(11) })
   })
 
-  it('sends a transaction with no gas margin', async () => {
-    await expect(sendTransaction(provider, request, false)).resolves.toBe(response)
+  it('sends a transaction with no gas limit', async () => {
+    await expect(sendTransaction(provider, request, 0.1, true)).resolves.toBe(response)
     expect(signer.sendUncheckedTransaction).toHaveBeenCalledWith({ ...request })
   })
 
