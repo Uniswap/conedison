@@ -2,6 +2,7 @@ import { TransactionRequest, TransactionResponse } from '@ethersproject/abstract
 import { BigNumber } from '@ethersproject/bignumber'
 import { Deferrable } from '@ethersproject/properties'
 import { JsonRpcProvider } from '@ethersproject/providers'
+import { poll } from '@ethersproject/web'
 
 import { getWalletMeta } from './meta'
 
@@ -35,5 +36,21 @@ export async function sendTransaction(
   }
 
   const hash = await provider.getSigner().sendUncheckedTransaction({ ...transaction, gasLimit })
-  return await provider.getTransaction(hash)
+
+  try {
+    // JSON-RPC only provides an opaque transaction hash, so we poll for the actual transaction.
+    // Polling continues until a defined value is returned (see https://docs.ethers.org/v5/api/utils/web/#utils-poll).
+    // NB: sendTransaction is a modified version of JsonRpcProvider.sendTransaction - see the original implementation.
+    return await poll<TransactionResponse>(
+      (async () => {
+        const tx = await provider.getTransaction(hash)
+        if (tx === null) return undefined
+        return provider._wrapTransaction(tx, hash)
+      }) as () => Promise<TransactionResponse>,
+      { oncePoll: provider }
+    )
+  } catch (error) {
+    error.transactionHash = hash
+    throw error
+  }
 }

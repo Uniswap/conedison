@@ -7,23 +7,37 @@ import * as Meta from './meta'
 jest.mock('./meta')
 
 describe('sendTransaction', () => {
+  const getTransaction = jest.fn()
   const sendUncheckedTransaction = jest.fn()
   const request = { calldata: 'test' } as TransactionRequest
   const response = {} as TransactionResponse
   const signer = { sendUncheckedTransaction } as unknown as JsonRpcSigner
   const provider = {
+    once: jest.fn(),
     estimateGas: jest.fn().mockResolvedValue(BigNumber.from(10)),
     getSigner: jest.fn().mockReturnValue(signer),
-    getTransaction: jest.fn().mockReturnValue(response),
+    getTransaction,
+    _wrapTransaction: jest.fn().mockImplementation((tx) => tx),
   } as unknown as JsonRpcProvider
 
   beforeEach(() => {
+    getTransaction.mockReturnValueOnce(response)
     sendUncheckedTransaction.mockReset()
   })
 
   it('sends a transaction with no gas margin', async () => {
     await expect(sendTransaction(provider, request)).resolves.toBe(response)
     expect(signer.sendUncheckedTransaction).toHaveBeenCalledWith({ ...request, gasLimit: BigNumber.from(10) })
+  })
+
+  it('polls for a response', async () => {
+    jest.spyOn(provider, 'once').mockImplementation((name, listener) => {
+      listener()
+      return provider
+    })
+    getTransaction.mockReset().mockReturnValueOnce(undefined).mockReturnValueOnce(response)
+    await expect(sendTransaction(provider, request)).resolves.toBe(response)
+    expect(getTransaction).toHaveBeenCalledTimes(2)
   })
 
   it('sends a transaction with configured gas margin', async () => {
@@ -40,6 +54,7 @@ describe('sendTransaction', () => {
     beforeEach(() => {
       const getWalletMeta = Meta.getWalletMeta as jest.Mock
       getWalletMeta.mockReturnValueOnce({ name: 'Uniswap Wallet' })
+      getTransaction.mockReturnValueOnce(response)
     })
 
     it('sends a transaction with no gas limit', async () => {
