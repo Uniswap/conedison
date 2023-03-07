@@ -27,15 +27,17 @@ export async function sendTransaction(
   gasMargin = 0,
   skipGasLimit = isUniswapWallet(provider)
 ): Promise<TransactionResponse> {
+  const signer = provider.getSigner()
+
   let gasLimit: BigNumber | undefined
   if (!skipGasLimit) {
-    gasLimit = await provider.estimateGas(transaction)
+    gasLimit = await signer.estimateGas(transaction)
     if (gasMargin) {
       gasLimit = gasLimit.add(gasLimit.mul(Math.floor(gasMargin * 100)).div(100))
     }
   }
 
-  const hash = await provider.getSigner().sendUncheckedTransaction({ ...transaction, gasLimit })
+  const hash = await signer.sendUncheckedTransaction({ ...transaction, gasLimit })
 
   try {
     // JSON-RPC only provides an opaque transaction hash, so we poll for the actual transaction.

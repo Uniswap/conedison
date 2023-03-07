@@ -11,10 +11,12 @@ describe('sendTransaction', () => {
   const sendUncheckedTransaction = jest.fn()
   const request = { calldata: 'test' } as TransactionRequest
   const response = {} as TransactionResponse
-  const signer = { sendUncheckedTransaction } as unknown as JsonRpcSigner
+  const signer = {
+    estimateGas: jest.fn().mockResolvedValue(BigNumber.from(10)),
+    sendUncheckedTransaction,
+  } as unknown as JsonRpcSigner
   const provider = {
     once: jest.fn(),
-    estimateGas: jest.fn().mockResolvedValue(BigNumber.from(10)),
     getSigner: jest.fn().mockReturnValue(signer),
     getTransaction,
     _wrapTransaction: jest.fn().mockImplementation((tx) => tx),
