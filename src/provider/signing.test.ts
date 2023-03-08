@@ -102,7 +102,7 @@ describe('signing', () => {
     itFailsIfRejected('eth_signTypedData_v4')
 
     describe('wallets which do not support eth_signTypedData_v4', () => {
-      describe.each(['SafePal Wallet'])('%s', (name) => {
+      describe.each(['SafePal Wallet', 'Ledger Wallet Connect'])('%s', (name) => {
         beforeEach(() => {
           const web3Provider = signer.provider as Mutable<Web3Provider>
           web3Provider.provider = { isWalletConnect: true, connector: { peerMeta: { name } } } as ExternalProvider
