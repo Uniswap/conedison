@@ -44,7 +44,21 @@ export async function signTypedData(
 
   const method = supportsV4(signer.provider) ? 'eth_signTypedData_v4' : 'eth_signTypedData'
   const address = (await signer.getAddress()).toLowerCase()
-  const message = JSON.stringify(_TypedDataEncoder.getPayload(populated.domain, types, populated.value))
+  const payload = _TypedDataEncoder.getPayload(populated.domain, types, populated.value)
+
+  // ethers converts uints to strings, which is against the spec; @see https://eips.ethereum.org/EIPS/eip-712#example.
+  // We must re-encode them as numbers, or some wallets (eg Exodus) will reject the request:
+  if (payload.domain.chainId) {
+    payload.domain.chainId = Number(payload.domain.chainId)
+  }
+  payload.message = _TypedDataEncoder.from(types).visit(populated.value, (type: string, value: any) => {
+    if (type.match(/^u?int/)) {
+      return Number(value)
+    } else {
+      return value
+    }
+  })
+  const message = JSON.stringify(payload)
 
   try {
     return await signer.provider.send(method, [address, message])

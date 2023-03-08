@@ -1,4 +1,5 @@
 import { ExternalProvider, JsonRpcProvider, JsonRpcSigner, Web3Provider } from '@ethersproject/providers'
+import { BigNumber } from 'ethers'
 import { Mutable } from 'types'
 
 import { signTypedData } from '../provider'
@@ -9,7 +10,7 @@ describe('signing', () => {
     const domain = {
       name: 'Ether Mail',
       version: '1',
-      chainId: '1',
+      chainId: 1,
       verifyingContract: '0xcccccccccccccccccccccccccccccccccccccccc',
     }
 
@@ -22,6 +23,8 @@ describe('signing', () => {
         { name: 'from', type: 'Person' },
         { name: 'to', type: 'Person' },
         { name: 'contents', type: 'string' },
+        { name: 'number', type: 'uint256' },
+        { name: 'bignum', type: 'uint256' },
       ],
     }
 
@@ -35,6 +38,13 @@ describe('signing', () => {
         wallet: '0xbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb',
       },
       contents: 'Hello, Bob!',
+      number: 9876543210,
+      bignum: BigNumber.from(1234567890)
+    }
+
+    const encodedValue = {
+      ...value,
+      bignum: 1234567890
     }
 
     let signer: JsonRpcSigner
@@ -66,7 +76,7 @@ describe('signing', () => {
         expect(send).toHaveBeenCalledWith(signingMethod, [wallet, expect.anything()])
         expect(send).toHaveBeenCalledWith('eth_sign', [wallet, expect.anything()])
         const hash = send.mock.lastCall[1]?.[1]
-        expect(hash).toBe('0xbe609aee343fb3c4b28e1df9e632fca64fcfaede20f02e86244efddf30957bd2')
+        expect(hash).toBe('0x997987773a7c24826f4d5bb58a0adb6909636e0a0def99de063639873969ad96')
       })
     }
 
@@ -81,7 +91,7 @@ describe('signing', () => {
         expect(send).toHaveBeenCalledTimes(1)
         expect(send).toHaveBeenCalledWith(signingMethod, [wallet, expect.anything()])
         const data = send.mock.lastCall[1]?.[1]
-        expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: value }))
+        expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: encodedValue }))
       })
     }
 
@@ -95,7 +105,7 @@ describe('signing', () => {
       expect(send).toHaveBeenCalledTimes(1)
       expect(send).toHaveBeenCalledWith('eth_signTypedData_v4', [wallet, expect.anything()])
       const data = send.mock.lastCall[1]?.[1]
-      expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: value }))
+      expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: encodedValue }))
     })
 
     itFallsBackToEthSignIfUnimplemented('eth_signTypedData_v4')
@@ -118,7 +128,7 @@ describe('signing', () => {
           expect(send).toHaveBeenCalledTimes(1)
           expect(send).toHaveBeenCalledWith('eth_signTypedData', [wallet, expect.anything()])
           const data = send.mock.lastCall[1]?.[1]
-          expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: value }))
+          expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: encodedValue }))
         })
 
         itFallsBackToEthSignIfUnimplemented('eth_signTypedData')
