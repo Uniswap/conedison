@@ -4,6 +4,19 @@ import { Mutable } from 'types'
 
 import { signTypedData } from '../provider'
 
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  namespace jest {
+    interface Matchers<R> {
+      toEqualEncodedValue(data: R): void
+    }
+    interface ExpectExtendMap {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      toEqualEncodedValue: (this: jest.MatcherContext, data: any) => jest.CustomMatcherResult
+    }
+  }
+}
+
 describe('signing', () => {
   describe('signTypedData', () => {
     const wallet = '0xcd2a3d9f938e13cd947ec05abc7fe734df8dd826'
@@ -39,18 +52,24 @@ describe('signing', () => {
       },
       contents: 'Hello, Bob!',
       number: 9876543210,
-      bignum: BigNumber.from(1234567890),
-    }
-
-    const encodedValue = {
-      ...value,
-      bignum: 1234567890,
+      bignum: BigNumber.from(Number.MAX_SAFE_INTEGER.toString()).add(1),
     }
 
     let signer: JsonRpcSigner
     beforeEach(() => {
       signer = new JsonRpcProvider().getSigner()
       jest.spyOn(signer, 'getAddress').mockResolvedValue(wallet)
+    })
+
+    expect.extend({
+      toEqualEncodedValue(data) {
+        expect(JSON.parse(data)).toEqual(
+          expect.objectContaining({ domain, message: { ...value, bignum: expect.anything() } })
+        )
+        // bignum will not be parsed correctly, so it must be checked explicitly:
+        expect(data).toContain(`"bignum":${value.bignum.toString()}`)
+        return { pass: true, message: () => 'Expected data to match encoded value' }
+      },
     })
 
     function itFallsBackToEthSignIfUnimplemented(signingMethod: string) {
@@ -91,11 +110,11 @@ describe('signing', () => {
         expect(send).toHaveBeenCalledTimes(1)
         expect(send).toHaveBeenCalledWith(signingMethod, [wallet, expect.anything()])
         const data = send.mock.lastCall[1]?.[1]
-        expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: encodedValue }))
+        expect(data).toEqualEncodedValue()
       })
     }
 
-    it('signs using eth_signTypedData_v4', async () => {
+    it.only('signs using eth_signTypedData_v4', async () => {
       const send = jest.spyOn(signer.provider, 'send').mockImplementationOnce((method, params) => {
         if (method === 'eth_signTypedData_v4') return Promise.resolve()
         throw new Error('Unimplemented')
@@ -105,7 +124,7 @@ describe('signing', () => {
       expect(send).toHaveBeenCalledTimes(1)
       expect(send).toHaveBeenCalledWith('eth_signTypedData_v4', [wallet, expect.anything()])
       const data = send.mock.lastCall[1]?.[1]
-      expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: encodedValue }))
+      expect(data).toEqualEncodedValue()
     })
 
     itFallsBackToEthSignIfUnimplemented('eth_signTypedData_v4')
@@ -128,7 +147,7 @@ describe('signing', () => {
           expect(send).toHaveBeenCalledTimes(1)
           expect(send).toHaveBeenCalledWith('eth_signTypedData', [wallet, expect.anything()])
           const data = send.mock.lastCall[1]?.[1]
-          expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: encodedValue }))
+          expect(data).toEqualEncodedValue()
         })
 
         itFallsBackToEthSignIfUnimplemented('eth_signTypedData')
