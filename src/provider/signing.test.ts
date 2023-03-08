@@ -1,5 +1,5 @@
+import { BigNumber } from '@ethersproject/bignumber'
 import { ExternalProvider, JsonRpcProvider, JsonRpcSigner, Web3Provider } from '@ethersproject/providers'
-import { BigNumber } from 'ethers'
 import { Mutable } from 'types'
 
 import { signTypedData } from '../provider'
@@ -39,12 +39,12 @@ describe('signing', () => {
       },
       contents: 'Hello, Bob!',
       number: 9876543210,
-      bignum: BigNumber.from(1234567890)
+      bignum: BigNumber.from(1234567890),
     }
 
     const encodedValue = {
       ...value,
-      bignum: 1234567890
+      bignum: 1234567890,
     }
 
     let signer: JsonRpcSigner

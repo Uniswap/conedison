@@ -51,7 +51,7 @@ export async function signTypedData(
   if (payload.domain.chainId) {
     payload.domain.chainId = Number(payload.domain.chainId)
   }
-  payload.message = _TypedDataEncoder.from(types).visit(populated.value, (type: string, value: any) => {
+  payload.message = _TypedDataEncoder.from(types).visit(populated.value, (type: string, value: unknown) => {
     if (type.match(/^u?int/)) {
       return Number(value)
     } else {
