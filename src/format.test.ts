@@ -1,4 +1,6 @@
-import { formatNumber, formatUSDPrice, NumberType } from './format'
+import { Percent } from '@uniswap/sdk-core'
+
+import { formatNumber, formatPriceImpact, formatSlippage, formatUSDPrice, NumberType } from './format'
 
 it('formats token reference numbers correctly', () => {
   expect(formatNumber(1234567000000000, NumberType.TokenNonTx)).toBe('>999T')
@@ -150,5 +152,33 @@ describe('formatUSDPrice', () => {
   })
   it('should correctly format 1000000000000000', () => {
     expect(formatUSDPrice(1_000_000_000_000_000)).toBe('>$999T')
+  })
+})
+
+describe('formatPriceImpact', () => {
+  it('should correctly format undefined', () => {
+    expect(formatPriceImpact(undefined)).toBe('-')
+  })
+
+  it('correctly formats a percent with 3 significant digits', () => {
+    expect(formatPriceImpact(new Percent(-1, 100000))).toBe('0.001%')
+    expect(formatPriceImpact(new Percent(-1, 1000))).toBe('0.100%')
+    expect(formatPriceImpact(new Percent(-1, 100))).toBe('1.000%')
+    expect(formatPriceImpact(new Percent(-1, 10))).toBe('10.000%')
+    expect(formatPriceImpact(new Percent(-1, 1))).toBe('100.000%')
+  })
+})
+
+describe('formatSlippage', () => {
+  it('should correctly format undefined', () => {
+    expect(formatSlippage(undefined)).toBe('-')
+  })
+
+  it('correctly formats a percent with 3 significant digits', () => {
+    expect(formatSlippage(new Percent(1, 100000))).toBe('0.001%')
+    expect(formatSlippage(new Percent(1, 1000))).toBe('0.100%')
+    expect(formatSlippage(new Percent(1, 100))).toBe('1.000%')
+    expect(formatSlippage(new Percent(1, 10))).toBe('10.000%')
+    expect(formatSlippage(new Percent(1, 1))).toBe('100.000%')
   })
 })
