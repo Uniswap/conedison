@@ -321,6 +321,12 @@ export function formatPriceImpact(priceImpact: Percent | undefined) {
   return `${priceImpact.multiply(-1).toFixed(3)}%`
 }
 
+export function formatSlippage(slippage: Percent | undefined) {
+  if (!slippage) return '-'
+
+  return `${slippage.toFixed(3)}%`
+}
+
 export function formatPrice(price: Nullish<Price<Currency, Currency>>, type: NumberType = NumberType.FiatTokenPrice) {
   if (price === null || price === undefined) {
     return '-'
