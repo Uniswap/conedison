@@ -5,11 +5,6 @@ import { Nullish } from './types'
 // Number formatting follows the standards laid out in this spec:
 // https://www.notion.so/uniswaplabs/Number-standards-fbb9f533f10e4e22820722c2f66d23c0
 
-const FIVE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
-  notation: 'standard',
-  maximumFractionDigits: 5,
-})
-
 const FIVE_DECIMALS_MAX_TWO_DECIMALS_MIN = new Intl.NumberFormat('en-US', {
   notation: 'standard',
   maximumFractionDigits: 5,
@@ -21,6 +16,12 @@ const FIVE_DECIMALS_MAX_TWO_DECIMALS_MIN_NO_COMMAS = new Intl.NumberFormat('en-U
   maximumFractionDigits: 5,
   minimumFractionDigits: 2,
   useGrouping: false,
+})
+
+const NO_DECIMALS = new Intl.NumberFormat('en-US', {
+  notation: 'standard',
+  maximumFractionDigits: 0,
+  minimumFractionDigits: 0,
 })
 
 const THREE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
@@ -73,9 +74,10 @@ const SHORTHAND_TWO_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', 
   maximumFractionDigits: 2,
 })
 
-const SHORTHAND_FIVE_DECIMALS_NO_TRAILING_ZEROS = new Intl.NumberFormat('en-US', {
+const SHORTHAND_ONE_DECIMAL = new Intl.NumberFormat('en-US', {
   notation: 'compact',
-  maximumFractionDigits: 5,
+  minimumFractionDigits: 1,
+  maximumFractionDigits: 1,
 })
 
 const SHORTHAND_USD_TWO_DECIMALS = new Intl.NumberFormat('en-US', {
@@ -161,6 +163,12 @@ const swapTradeAmountFormatter: FormatterRule[] = [
   { upperBound: Infinity, formatter: SIX_SIG_FIGS_TWO_DECIMALS_NO_COMMAS },
 ]
 
+const swapPriceFormatter: FormatterRule[] = [
+  { exact: 0, formatter: '0' },
+  { upperBound: 0.00001, formatter: '<0.00001' },
+  ...swapTradeAmountFormatter,
+]
+
 const fiatTokenDetailsFormatter: FormatterRule[] = [
   { exact: 0, formatter: '$0.00' },
   { upperBound: 0.00000001, formatter: '<$0.00000001' },
@@ -173,11 +181,9 @@ const fiatTokenDetailsFormatter: FormatterRule[] = [
 const fiatTokenPricesFormatter: FormatterRule[] = [
   { exact: 0, formatter: '$0.00' },
   { upperBound: 0.00000001, formatter: '<$0.00000001' },
-  { upperBound: 0.1, formatter: THREE_SIG_FIGS_USD }, // Round to 3 significant figures, show significant trailing zeros
-  { upperBound: 1.05, formatter: THREE_DECIMALS_USD }, // Round to 3 decimal places, show significant trailing zeros
-  { upperBound: 1_000_000, formatter: TWO_DECIMALS_USD }, // Round to 2 decimal places
-  { upperBound: 1_000_000_000_000_000, formatter: SHORTHAND_USD_TWO_DECIMALS }, // Use M/B/T abbreviations
-  { upperBound: Infinity, formatter: '>$999T' }, // Use M/B/T abbreviations
+  { upperBound: 1, formatter: THREE_SIG_FIGS_USD },
+  { upperBound: 1e6, formatter: TWO_DECIMALS_USD },
+  { upperBound: Infinity, formatter: SHORTHAND_USD_TWO_DECIMALS },
 ]
 
 const fiatTokenStatsFormatter: FormatterRule[] = [
@@ -220,12 +226,8 @@ const ntfTokenFloorPriceFormatter: FormatterRule[] = [
 ]
 
 const ntfCollectionStatsFormatter: FormatterRule[] = [
-  { exact: 0, formatter: '0' },
-  { upperBound: 0.00001, formatter: '<0.00001' },
-  { upperBound: 1, formatter: FIVE_DECIMALS_NO_TRAILING_ZEROS },
-  { upperBound: 1e6, formatter: SIX_SIG_FIGS_NO_COMMAS },
-  { upperBound: 1e15, formatter: SHORTHAND_FIVE_DECIMALS_NO_TRAILING_ZEROS },
-  { upperBound: Infinity, formatter: '>999T' },
+  { upperBound: 1000, formatter: NO_DECIMALS },
+  { upperBound: Infinity, formatter: SHORTHAND_ONE_DECIMAL },
 ]
 
 export enum NumberType {
@@ -234,6 +236,10 @@ export enum NumberType {
 
   // used for token quantities in transaction contexts (e.g. swap, send)
   TokenTx = 'token-tx',
+
+  // this formatter is used for displaying swap price conversions
+  // below the input/output amounts
+  SwapPrice = 'swap-price',
 
   // this formatter is only used for displaying the swap trade output amount
   // in the text input boxes. Output amounts on review screen should use the above TokenTx formatter
@@ -270,6 +276,7 @@ export enum NumberType {
 const TYPE_TO_FORMATTER_RULES = {
   [NumberType.TokenNonTx]: tokenNonTxFormatter,
   [NumberType.TokenTx]: tokenTxFormatter,
+  [NumberType.SwapPrice]: swapPriceFormatter,
   [NumberType.SwapTradeAmount]: swapTradeAmountFormatter,
   [NumberType.FiatTokenQuantity]: fiatTokenQuantityFormatter,
   [NumberType.FiatTokenDetails]: fiatTokenDetailsFormatter,
@@ -282,10 +289,9 @@ const TYPE_TO_FORMATTER_RULES = {
   [NumberType.NFTCollectionStats]: ntfCollectionStatsFormatter,
 }
 
-function getFormatterRule(input: number, type: NumberType) {
+function getFormatterRule(input: number, type: NumberType): Format {
   const rules = TYPE_TO_FORMATTER_RULES[type]
-  for (let i = 0; i < rules.length; i++) {
-    const rule = rules[i]
+  for (const rule of rules) {
     if (
       (rule.exact !== undefined && input === rule.exact) ||
       (rule.upperBound !== undefined && input < rule.upperBound)
@@ -297,7 +303,11 @@ function getFormatterRule(input: number, type: NumberType) {
   throw new Error(`formatter for type ${type} not configured correctly`)
 }
 
-export function formatNumber(input: Nullish<number>, type: NumberType = NumberType.TokenNonTx, placeholder = '-') {
+export function formatNumber(
+  input: Nullish<number>,
+  type: NumberType = NumberType.TokenNonTx,
+  placeholder = '-'
+): string {
   if (input === null || input === undefined) {
     return placeholder
   }
@@ -311,11 +321,11 @@ export function formatCurrencyAmount(
   amount: Nullish<CurrencyAmount<Currency>>,
   type: NumberType = NumberType.TokenNonTx,
   placeholder?: string
-) {
+): string {
   return formatNumber(amount ? parseFloat(amount.toSignificant()) : undefined, type, placeholder)
 }
 
-export function formatPriceImpact(priceImpact: Percent | undefined) {
+export function formatPriceImpact(priceImpact: Percent | undefined): string {
   if (!priceImpact) return '-'
 
   return `${priceImpact.multiply(-1).toFixed(3)}%`
@@ -327,7 +337,10 @@ export function formatSlippage(slippage: Percent | undefined) {
   return `${slippage.toFixed(3)}%`
 }
 
-export function formatPrice(price: Nullish<Price<Currency, Currency>>, type: NumberType = NumberType.FiatTokenPrice) {
+export function formatPrice(
+  price: Nullish<Price<Currency, Currency>>,
+  type: NumberType = NumberType.FiatTokenPrice
+): string {
   if (price === null || price === undefined) {
     return '-'
   }
@@ -339,7 +352,7 @@ export function formatPrice(price: Nullish<Price<Currency, Currency>>, type: Num
  * Very simple date formatter
  * Feel free to add more options / adapt to your needs.
  */
-export function formatDate(date: Date) {
+export function formatDate(date: Date): string {
   return date.toLocaleString('en-US', {
     day: 'numeric', // numeric, 2-digit
     year: 'numeric', // numeric, 2-digit
@@ -349,12 +362,18 @@ export function formatDate(date: Date) {
   })
 }
 
-export function formatNumberOrString(price: Nullish<number | string>, type: NumberType) {
+export function formatNumberOrString(price: Nullish<number | string>, type: NumberType): string {
   if (price === null || price === undefined) return '-'
   if (typeof price === 'string') return formatNumber(parseFloat(price), type)
   return formatNumber(price, type)
 }
 
-export function formatUSDPrice(price: Nullish<number | string>, type: NumberType = NumberType.FiatTokenPrice) {
+export function formatUSDPrice(price: Nullish<number | string>, type: NumberType = NumberType.FiatTokenPrice): string {
   return formatNumberOrString(price, type)
+}
+
+/** Formats USD and non-USD prices */
+export function formatFiatPrice(price: Nullish<number>, currency = 'USD'): string {
+  if (price === null || price === undefined) return '-'
+  return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(price)
 }
