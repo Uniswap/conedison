@@ -170,6 +170,7 @@ const swapPriceFormatter: FormatterRule[] = [
 ]
 
 const fiatTokenDetailsFormatter: FormatterRule[] = [
+  { exact: 0, formatter: '$0.00' },
   { upperBound: 0.00000001, formatter: '<$0.00000001' },
   { upperBound: 0.1, formatter: THREE_SIG_FIGS_USD },
   { upperBound: 1.05, formatter: THREE_DECIMALS_USD },
@@ -178,6 +179,7 @@ const fiatTokenDetailsFormatter: FormatterRule[] = [
 ]
 
 const fiatTokenPricesFormatter: FormatterRule[] = [
+  { exact: 0, formatter: '$0.00' },
   { upperBound: 0.00000001, formatter: '<$0.00000001' },
   { upperBound: 1, formatter: THREE_SIG_FIGS_USD },
   { upperBound: 1e6, formatter: TWO_DECIMALS_USD },
