@@ -125,5 +125,26 @@ describe('signing', () => {
         itFailsIfRejected('eth_signTypedData')
       })
     })
+
+    describe('TrustWallet fallback for eth_signTypedData_v4', () => {
+      beforeEach(() => {
+        const web3Provider = signer.provider as Mutable<Web3Provider>
+        web3Provider.provider = {
+          isWalletConnect: true,
+          connector: { peerMeta: { name: 'Trust Wallet' } },
+        } as ExternalProvider
+      })
+
+      it('signs using eth_sign', async () => {
+        const send = jest.spyOn(signer.provider, 'send').mockImplementation((method, params) => {
+          if (method === 'eth_sign') return Promise.resolve()
+          throw new Error('TrustWalletConnect.WCError error 1')
+        })
+
+        await signTypedData(signer, domain, types, value)
+        expect(send).toHaveBeenCalledTimes(2)
+        expect(send).toHaveBeenCalledWith('eth_sign', [wallet, expect.anything()])
+      })
+    })
   })
 })
