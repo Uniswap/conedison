@@ -69,6 +69,7 @@ it('formats gas USD prices correctly', () => {
   expect(formatNumber(1234567.891, NumberType.FiatGasPrice)).toBe('$1.23M')
   expect(formatNumber(18.448, NumberType.FiatGasPrice)).toBe('$18.45')
   expect(formatNumber(0.0099, NumberType.FiatGasPrice)).toBe('<$0.01')
+  expect(formatNumber(0, NumberType.FiatGasPrice)).toBe('$0.00')
 })
 
 it('formats USD token quantities prices correctly', () => {
