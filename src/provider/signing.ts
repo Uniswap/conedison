@@ -52,7 +52,9 @@ export async function signTypedData(
     // If eth_signTypedData is unimplemented, fall back to eth_sign.
     if (
       typeof error.message === 'string' &&
-      (error.message.match(/not (found|implemented)/i) || error.message.match(/TrustWalletConnect.WCError error 1/))
+      (error.message.match(/not (found|implemented)/i) ||
+        error.message.match(/TrustWalletConnect.WCError error 1/) ||
+        error.message.match(/Missing or invalid/))
     ) {
       console.warn('signTypedData: wallet does not implement EIP-712, falling back to eth_sign', error.message)
       const hash = _TypedDataEncoder.hash(populated.domain, types, populated.value)
