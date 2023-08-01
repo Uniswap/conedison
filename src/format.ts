@@ -127,6 +127,14 @@ const THREE_SIG_FIGS_USD = new Intl.NumberFormat('en-US', {
   style: 'currency',
 })
 
+const SEVEN_SIG_FIGS__SCI_NOTATION_USD = new Intl.NumberFormat('en-US', {
+  notation: 'scientific',
+  minimumSignificantDigits: 7,
+  maximumSignificantDigits: 7,
+  currency: 'USD',
+  style: 'currency',
+})
+
 type Format = Intl.NumberFormat | string
 
 // each rule must contain either an `upperBound` or an `exact` value.
@@ -183,7 +191,8 @@ const fiatTokenPricesFormatter: FormatterRule[] = [
   { upperBound: 0.00000001, formatter: '<$0.00000001' },
   { upperBound: 1, formatter: THREE_SIG_FIGS_USD },
   { upperBound: 1e6, formatter: TWO_DECIMALS_USD },
-  { upperBound: Infinity, formatter: SHORTHAND_USD_TWO_DECIMALS },
+  { upperBound: 1e16, formatter: SHORTHAND_USD_TWO_DECIMALS },
+  { upperBound: Infinity, formatter: SEVEN_SIG_FIGS__SCI_NOTATION_USD },
 ]
 
 const fiatTokenStatsFormatter: FormatterRule[] = [
