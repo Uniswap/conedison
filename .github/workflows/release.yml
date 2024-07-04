@@ -41,4 +41,3 @@ jobs:
           NPM_TOKEN: ${{ env.NPM_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # Optional
         run: yarn g:release
-      
