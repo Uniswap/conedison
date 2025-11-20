@@ -44,7 +44,12 @@ export async function signTypedData(
 
   const method = supportsV4(signer.provider) ? 'eth_signTypedData_v4' : 'eth_signTypedData'
   const address = (await signer.getAddress()).toLowerCase()
-  const message = JSON.stringify(_TypedDataEncoder.getPayload(populated.domain, types, populated.value))
+  const payload = _TypedDataEncoder.getPayload(populated.domain, types, populated.value)
+
+  // TODO(WEB-000): remove string to number parsing after Ethers v6 migration
+  payload.domain.chainId = payload.domain.chainId != null ? Number(payload.domain.chainId) : undefined
+
+  const message = JSON.stringify(payload)
 
   try {
     return await signer.provider.send(method, [address, message])
