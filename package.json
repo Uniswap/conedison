@@ -5,12 +5,6 @@
   "repository": "https://github.com/Uniswap/conedison",
   "homepage": "https://github.com/Uniswap/conedison#readme",
   "bugs": "https://github.com/Uniswap/conedison/issues",
-  "files": [
-    "dist/"
-  ],
-  "exports": {
-    "./*": "./dist/*"
-  },
   "typesVersions": {
     "*": {
       "*": [
