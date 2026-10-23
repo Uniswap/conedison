@@ -9,7 +9,13 @@ describe('signing', () => {
     const domain = {
       name: 'Ether Mail',
       version: '1',
-      chainId: '1',
+      chainId: 1,
+      verifyingContract: '0xcccccccccccccccccccccccccccccccccccccccc',
+    }
+
+    const domainNoChain = {
+      name: 'Ether Mail',
+      version: '1',
       verifyingContract: '0xcccccccccccccccccccccccccccccccccccccccc',
     }
 
@@ -96,6 +102,15 @@ describe('signing', () => {
       expect(send).toHaveBeenCalledWith('eth_signTypedData_v4', [wallet, expect.anything()])
       const data = send.mock.lastCall[1]?.[1]
       expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain, message: value }))
+    })
+
+    it('does not fail when domain.chainId is not defined', async () => {
+      const send = jest.spyOn(signer.provider, 'send').mockImplementationOnce(() => Promise.resolve())
+
+      await signTypedData(signer, domainNoChain, types, value)
+      expect(send).toHaveBeenCalledTimes(1)
+      const data = send.mock.lastCall[1]?.[1]
+      expect(JSON.parse(data)).toEqual(expect.objectContaining({ domain: domainNoChain, message: value }))
     })
 
     itFallsBackToEthSignIfUnimplemented('eth_signTypedData_v4')
